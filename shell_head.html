@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ProPitching Index</title>
+<meta name="description" content="ProPitching Index: every MLB pitch graded on a 100 scale. Leaderboards, pitcher pages and game logs, 2023 to 2026.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+/* Site shell: brand navy/teal from the ProPitching Index deck; light and dark themes */
+:root {
+  --color-bg: #F5F5F1; --color-panel: #FFFFFC; --color-fg: #111A2B; --color-fg-muted: #5A6475;
+  --color-border-line: #DADDD6; --color-ok: #0F7A6E; --color-bad: #B4412F; --color-warn: #B7791F;
+  --c1: #0F7A6E; --c2: #C2410C; --c3: #4F46E5;
+  --cds-chart-grid: #E4E6E0; --cds-chart-muted: #B9BFC8; --cds-chart-axis: #8A94A6; --cds-chart-reference: #8A94A6;
+  --cds-surface-popover: #F0F1EC; --cds-border: #DADDD6; --cds-shadow-popover: 0 4px 16px rgba(17,26,43,.12); --cds-text-secondary: #5A6475;
+  --font-anthropic-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-anthropic-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --cds-font-size-caption: 0.8125rem; --cds-font-size-body: 0.9375rem; --cds-font-size-heading: 1.0625rem; --cds-font-size-title: 2rem;
+  --cds-font-weight-medium: 600;
+  --cds-gap-xs: 0.25rem; --cds-gap-sm: 0.5rem; --cds-gap-md: 1rem; --cds-gap-lg: 1.5rem;
+  --cds-pad-xs: 0.3rem; --cds-pad-sm: 0.55rem; --cds-pad-md: 1rem; --cds-pad-lg: 1.25rem;
+  --cds-radius: 8px; --cds-dur-slow: 300ms;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0E1522; --color-panel: #162033; --color-fg: #EEF0EA; --color-fg-muted: #9AA5B6;
+    --color-border-line: #2A374D; --color-ok: #4CC9B8; --color-bad: #F08A73; --color-warn: #E8B45C;
+    --c1: #4CC9B8; --c2: #F0A060; --c3: #A5A1F5;
+    --cds-chart-grid: #233047; --cds-chart-muted: #4A5872; --cds-chart-axis: #6E7B91; --cds-chart-reference: #6E7B91;
+    --cds-surface-popover: #1D2940; --cds-border: #2A374D; --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.4); --cds-text-secondary: #9AA5B6;
+    color-scheme: dark;
+  }
+}
+html { -webkit-text-size-adjust: 100%; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); font-size: 15px;
+  padding: max(16px, env(safe-area-inset-top)) clamp(16px, 4vw, 48px) max(24px, env(safe-area-inset-bottom)); }
+.site-brand { display: flex; align-items: center; gap: 12px; max-width: 90rem; margin: 0 auto 12px; }
+.site-brand img { width: 40px; height: 40px; }
+.site-brand span { font-size: 0.8125rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--color-ok); }
+.dash-skeleton { display: inline-block; min-width: 8rem; color: transparent; background: var(--color-border-line); border-radius: 4px; }
+.site-foot { max-width: 90rem; margin: 32px auto 0; padding-top: 16px; border-top: 1px solid var(--color-border-line);
+  font-size: 0.8125rem; color: var(--color-fg-muted); line-height: 1.6; }
+.site-foot a { color: var(--color-ok); }
+.pp b { font-weight: 600; }
+</style>
+<script>
+/* Minimal stand-in for the dashboard runtime: loads the JSON files and redraws on change. */
+window.dash = (() => {
+  const files = { season: "data/season.json", arsenal: "data/arsenal.json",
+    games_2023: "data/games_2023.json", games_2024: "data/games_2024.json",
+    games_2025: "data/games_2025.json", games_2026: "data/games_2026.json" };
+  const store = {}, fns = [];
+  const params = { year: null, pitcher: null };
+  const run = () => fns.forEach((f) => { try { f(); } catch (e) { console.error(e); } });
+  const load = (id) => {
+    if (store[id]) return;
+    store[id] = { status: "loading", data: [] };
+    fetch(files[id]).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then((d) => { store[id] = { status: "ok", data: d }; run(); })
+      .catch((e) => { store[id] = { status: "error", data: [], message: String(e) }; run(); });
+  };
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(run, 150); });
+  return {
+    data(id) { if (!files[id]) return { status: "missing", data: [] }; load(id); return store[id]; },
+    params: () => ({ ...params }),
+    setParams(p) { Object.assign(params, p); run(); },
+    resetParams() { params.year = null; params.pitcher = null; run(); },
+    onData(f) { fns.push(f); f(); },
+    setLink(name) { try { history.replaceState(null, "", "#" + name); } catch (e) {} },
+    refresh() {},
+    colors: ["var(--c1)", "var(--c2)", "var(--c3)"],
+  };
+})();
+</script>
+</head>
+<body>
+<header class="site-brand"><img src="logo.svg" alt="" width="40" height="40"><span>ProPitching Index</span></header>

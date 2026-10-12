@@ -1,0 +1,519 @@
+<style>
+.pp { display: flex; flex-direction: column; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); color: var(--color-fg); max-width: 90rem; margin-inline: auto; }
+.pp-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--cds-gap-md); }
+.pp-head > div { min-width: 0; }
+.pp-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+.pp-take { margin: var(--cds-gap-xs) 0 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+.pp-take b { color: var(--color-fg); font-weight: 600; }
+.pp-ctl { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+.pp-ctl label { display: flex; align-items: center; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pp select, .pp input { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 0; }
+.pp input[type=search] { width: min(100%, 16rem); }
+.pp-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); }
+.pp-tab { font: inherit; font-size: var(--cds-font-size-body); background: none; border: none; border-bottom: 2px solid transparent; color: var(--color-fg-muted); padding: var(--cds-pad-sm) var(--cds-pad-md); cursor: pointer; margin-bottom: -1px; }
+.pp-tab[aria-selected=true] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: 600; }
+.pp-tab:focus-visible, .pp th button:focus-visible, .pp-seg button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.pp-page { display: flex; flex-direction: column; gap: var(--cds-gap-md); }
+.pp-page[hidden] { display: none; }
+.pp-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+.pp-card h2, .pp-card h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.pp-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+.pp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: var(--cds-gap-md); }
+.pp-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+.pp-tile .k { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pp-tile .v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.pp-tile .s { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pp-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--cds-gap-sm); }
+.pp-who h2 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+.pp-who p { margin: 0; color: var(--color-fg-muted); }
+.pp-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+.pp-seg button { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg-muted); border: none; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+.pp-seg button[aria-pressed=true] { background: var(--color-fg); color: var(--color-bg); }
+.pp-scroll { max-height: 70vh; overflow: auto; }
+.pp-scroll.short { max-height: 26rem; }
+.pp table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.pp th { position: sticky; top: 0; background: var(--color-panel); text-align: right; font-weight: 600; color: var(--color-fg-muted); border-bottom: 1px solid var(--color-border-line); padding: 0; white-space: nowrap; z-index: 1; }
+.pp th button { font: inherit; color: inherit; background: none; border: none; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; width: 100%; text-align: inherit; }
+.pp th.l, .pp td.l { text-align: left; }
+.pp td { text-align: right; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.pp tbody tr.click { cursor: pointer; }
+.pp tbody tr.click:hover td { background: var(--cds-surface-popover); }
+.pp td.name { font-weight: 600; color: var(--color-fg); }
+.pp .good { color: var(--color-ok); font-weight: 600; }
+.pp .bad { color: var(--color-bad); font-weight: 600; }
+.pp .bar { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); justify-content: flex-end; }
+.pp .bar i { display: inline-block; width: 4.5rem; height: 0.5rem; background: var(--cds-chart-grid); border-radius: 4px; position: relative; overflow: hidden; }
+.pp .bar i b { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.pp-chart { position: relative; min-height: 15rem; }
+.pp-chart svg { display: block; overflow: visible; }
+.pp-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+.pp-tip .d { color: var(--cds-text-secondary); }
+.pp-method { max-width: 44rem; display: flex; flex-direction: column; gap: var(--cds-gap-md); line-height: 1.55; }
+.pp-method h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.pp-method p { margin: 0; }
+.pp-method table { max-width: 28rem; }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.pp-fail { display: flex; align-items: center; justify-content: center; gap: var(--cds-gap-xs); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); min-height: 6rem; }
+.pp-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+@media (max-width: 40rem) { .pp .hide-sm { display: none; } }
+</style>
+
+<div class="pp">
+  <header class="pp-head">
+    <div>
+      <h1 class="pp-title" id="title">ProPitching Index</h1>
+      <p class="pp-take" id="takeaway"><span class="dash-skeleton">—</span></p>
+    </div>
+    <div class="pp-ctl">
+      <label for="pp-year">Season <select id="pp-year" aria-label="Season" data-source="season"></select></label>
+    </div>
+  </header>
+
+  <nav class="pp-tabs" role="tablist" aria-label="Pages">
+    <button class="pp-tab" role="tab" id="tab-leaders" data-page="leaders" aria-selected="true">Leaderboard</button>
+    <button class="pp-tab" role="tab" id="tab-pitcher" data-page="pitcher" aria-selected="false">Pitcher</button>
+    <button class="pp-tab" role="tab" id="tab-games" data-page="games" aria-selected="false">Games</button>
+    <button class="pp-tab" role="tab" id="tab-method" data-page="method" aria-selected="false">How it works</button>
+  </nav>
+
+  <section class="pp-page" id="leaders" role="tabpanel">
+    <div class="pp-card" id="lb-card">
+      <div class="pp-ctl" style="justify-content: space-between">
+        <div>
+          <h2 id="lb-title">Season leaderboard</h2>
+          <p class="pp-note">PPI grades every pitch against all pitches in the same count. 100 is average, 10 points is one standard deviation. Click a pitcher to open his page.</p>
+        </div>
+        <div class="pp-ctl">
+          <div class="pp-seg" id="lb-role" role="group" aria-label="Role">
+            <button data-v="all" aria-pressed="true">All</button><button data-v="SP" aria-pressed="false">Starters</button><button data-v="RP" aria-pressed="false">Relievers</button>
+          </div>
+          <label for="lb-min">Min pitches <select id="lb-min"><option value="300">300</option><option value="1000" selected>1,000</option><option value="1500">1,500</option><option value="2000">2,000</option></select></label>
+          <input type="search" id="lb-q" placeholder="Search pitcher or team" aria-label="Search pitcher or team">
+        </div>
+      </div>
+      <div class="pp-scroll" id="lb-wrap">
+        <table id="lb-table" data-source="season" data-row-key="id">
+          <thead><tr>
+            <th class="l"><button data-k="rank">#</button></th>
+            <th class="l" data-field="name"><button data-k="name">Pitcher</button></th>
+            <th class="l" data-field="team"><button data-k="team">Team</button></th>
+            <th class="l hide-sm" data-field="role"><button data-k="role">Role</button></th>
+            <th class="hide-sm" data-field="pitches"><button data-k="pitches">Pitches</button></th>
+            <th data-field="ppi"><button data-k="ppi">PPI</button></th>
+            <th data-field="scout"><button data-k="scout">Scout</button></th>
+            <th data-field="arsenal"><button data-k="arsenal">Arsenal+</button></th>
+            <th data-field="command"><button data-k="command">Command+</button></th>
+            <th class="hide-sm" data-field="projected"><button data-k="projected">Projected</button></th>
+            <th class="hide-sm" data-field="runs_saved"><button data-k="runs_saved">Runs saved</button></th>
+            <th class="hide-sm" data-field="xwoba"><button data-k="xwoba">xwOBA</button></th>
+            <th class="hide-sm" data-field="k_pct"><button data-k="k_pct">K%</button></th>
+            <th class="hide-sm" data-field="bb_pct"><button data-k="bb_pct">BB%</button></th>
+            <th class="hide-sm" data-field="csw_pct"><button data-k="csw_pct">CSW%</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="pp-note" id="lb-count"></p>
+    </div>
+  </section>
+
+  <section class="pp-page" id="pitcher" role="tabpanel" hidden>
+    <div class="pp-ctl">
+      <label for="pi-q">Pitcher <input type="search" id="pi-q" list="pi-list" placeholder="Type a name" aria-label="Find a pitcher" autocomplete="off"></label>
+      <datalist id="pi-list"></datalist>
+    </div>
+    <div class="pp-who" id="pi-who"><h2 id="pi-name" class="dash-skeleton">—</h2><p id="pi-meta"></p></div>
+    <div class="pp-tiles" id="pi-tiles">
+      <div class="pp-tile"><span class="k">PPI</span><span class="v" id="t-ppi" data-source="season" data-field="ppi">—</span><span class="s" id="t-ppi-s"></span></div>
+      <div class="pp-tile"><span class="k">Arsenal+ (stuff)</span><span class="v" id="t-ars" data-source="season" data-field="arsenal">—</span><span class="s">Velocity, spin and movement</span></div>
+      <div class="pp-tile"><span class="k">Command+</span><span class="v" id="t-cmd" data-source="season" data-field="command">—</span><span class="s">Hitting his spots, avoiding costly balls</span></div>
+      <div class="pp-tile"><span class="k">Projected PPI</span><span class="v" id="t-proj" data-source="season" data-field="projected">—</span><span class="s">75% PPI + 25% Arsenal+</span></div>
+      <div class="pp-tile"><span class="k">Runs saved</span><span class="v" id="t-rs" data-source="season" data-field="runs_saved">—</span><span class="s">vs an average pitch in the same counts</span></div>
+      <div class="pp-tile"><span class="k">xwOBA allowed</span><span class="v" id="t-xw" data-source="season" data-field="xwoba">—</span><span class="s">Expected results from contact, K and BB</span></div>
+    </div>
+    <div class="pp-grid">
+      <div class="pp-card" id="hist-card">
+        <h3>Grades by season</h3>
+        <p class="pp-note">Regular season. The dashed line is average (100).</p>
+        <div class="pp-chart" id="hist-chart" data-source="season"></div>
+      </div>
+      <div class="pp-card" id="glog-card">
+        <h3 id="glog-title">Game PPI, every outing</h3>
+        <p class="pp-note">Each bar is one game, above or below average. Postseason games included.</p>
+        <div class="pp-chart" id="glog-chart"></div>
+      </div>
+    </div>
+    <div class="pp-card" id="ars-card">
+      <h3>Pitch by pitch type</h3>
+      <p class="pp-note">Regular season, pitch types thrown 20+ times. IVB and HB are induced vertical and horizontal break in inches (positive HB is toward his arm side).</p>
+      <div class="pp-scroll short">
+        <table id="ars-table" data-source="arsenal" data-row-key="id">
+          <thead><tr>
+            <th class="l" data-field="pitch">Pitch</th><th data-field="pitches">Pitches</th><th data-field="usage_pct">Usage %</th>
+            <th data-field="velo">Velo</th><th class="hide-sm" data-field="ivb">IVB</th><th class="hide-sm" data-field="hb">HB</th><th class="hide-sm" data-field="spin">Spin</th>
+            <th class="hide-sm" data-field="whiff_pct">Whiff %</th><th class="hide-sm" data-field="csw_pct">CSW %</th>
+            <th data-field="ppi">PPI</th><th data-field="scout">Scout</th><th data-field="arsenal">Arsenal+</th><th data-field="command">Command+</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pp-card" id="pg-card">
+      <h3>Game log</h3>
+      <div class="pp-scroll short">
+        <table id="pg-table" data-row-key="id">
+          <thead><tr>
+            <th class="l" data-field="date">Date</th><th class="l" data-field="opp">Opp</th><th class="l hide-sm" data-field="post">Postseason</th>
+            <th data-field="ip">IP</th><th data-field="pitches">Pitches</th><th data-field="k">K</th><th data-field="bb">BB</th><th class="hide-sm" data-field="h">H</th><th class="hide-sm" data-field="r">R</th>
+            <th class="hide-sm" data-field="csw_pct">CSW %</th><th class="hide-sm" data-field="velo_max">Max velo</th><th data-field="game_ppi">Game PPI</th><th data-field="scout">Scout</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pp-page" id="games" role="tabpanel" hidden>
+    <div class="pp-card" id="latest-card">
+      <h2 id="latest-title">Latest games</h2>
+      <p class="pp-note">Every pitcher who threw 10+ pitches on the most recent day with games, best Game PPI first. Click a row to open the pitcher.</p>
+      <div class="pp-scroll short">
+        <table id="latest-table" data-row-key="id">
+          <thead><tr>
+            <th class="l" data-field="name">Pitcher</th><th class="l" data-field="team">Team</th><th class="l" data-field="opp">Opp</th><th class="l hide-sm" data-field="post">Postseason</th>
+            <th data-field="ip">IP</th><th data-field="pitches">Pitches</th><th data-field="k">K</th><th data-field="bb">BB</th><th class="hide-sm" data-field="h">H</th><th class="hide-sm" data-field="r">R</th>
+            <th data-field="game_ppi">Game PPI</th><th data-field="scout">Scout</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pp-card" id="best-card">
+      <h2 id="best-title">Best outings of the season</h2>
+      <p class="pp-note">Top 30 Game PPI among outings of 60+ pitches.</p>
+      <div class="pp-scroll short">
+        <table id="best-table" data-row-key="id">
+          <thead><tr>
+            <th class="l" data-field="date">Date</th><th class="l" data-field="name">Pitcher</th><th class="l" data-field="team">Team</th><th class="l" data-field="opp">Opp</th>
+            <th data-field="ip">IP</th><th data-field="pitches">Pitches</th><th data-field="k">K</th><th data-field="bb">BB</th><th class="hide-sm" data-field="h">H</th><th class="hide-sm" data-field="r">R</th>
+            <th data-field="game_ppi">Game PPI</th><th data-field="scout">Scout</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pp-page" id="method" role="tabpanel" hidden>
+    <div class="pp-method">
+      <h3>What PPI measures</h3>
+      <p>Every pitch changes the at-bat. A strike moves the batter into a worse count, a ball into a better one, and a ball in play has an expected result from its exit speed and angle. PPI measures how much each pitch lowered the batter's expected result, using what really happened to batters in that same count since 2023. It counts three things: the batter's overall expected result (xwOBA), his chance of reaching base (a walk counts), and his chance of hitting for power.</p>
+      <h3>How to read the numbers</h3>
+      <p>Each pitch is ranked against every pitch thrown in the same count, so a great 0-0 pitch and a great 3-2 pitch both score high. 100 is average and 10 points is one standard deviation: 110 beats about 84% of pitches, 120 about 98%. Season grades are adjusted for sample size, so a pitcher with few pitches is pulled toward 100.</p>
+      <h3>The family of grades</h3>
+      <p><b>PPI</b> is the overall grade of the pitch. <b>Arsenal+</b> grades only its physics: velocity, spin, movement, release and how it pairs with his fastball, ignoring where it went. <b>Command+</b> grades how close he came to his usual spot for that pitch, hitter side and count, and how costly a likely ball was in that count. <b>Projected PPI</b> is 75% PPI plus 25% Arsenal+, the mix that best predicted the next season. <b>Runs saved</b> adds up how much better each pitch was than an average pitch in the same count, in runs.</p>
+      <h3>Scouting scale</h3>
+      <p>The scouting grade is PPI minus 50, rounded to the nearest 5 and kept between 20 and 80.</p>
+      <table>
+        <thead><tr><th class="l">Scout</th><th class="l">Label</th><th>PPI</th></tr></thead>
+        <tbody>
+          <tr><td class="l">80</td><td class="l">Elite</td><td>128 or more</td></tr>
+          <tr><td class="l">70 to 75</td><td class="l">Plus-plus</td><td>118 to 127</td></tr>
+          <tr><td class="l">60 to 65</td><td class="l">Plus</td><td>108 to 117</td></tr>
+          <tr><td class="l">55</td><td class="l">Above average</td><td>103 to 107</td></tr>
+          <tr><td class="l">50</td><td class="l">Average</td><td>98 to 102</td></tr>
+          <tr><td class="l">45</td><td class="l">Fringe</td><td>93 to 97</td></tr>
+          <tr><td class="l">40</td><td class="l">Below average</td><td>88 to 92</td></tr>
+          <tr><td class="l">30 to 35</td><td class="l">Well below average</td><td>78 to 87</td></tr>
+          <tr><td class="l">20 to 25</td><td class="l">Poor</td><td>77 or less</td></tr>
+        </tbody>
+      </table>
+      <h3>Where the data comes from</h3>
+      <p>Pitch-by-pitch Statcast data from Baseball Savant, regular season and postseason, 2023 to 2026. Each season is graded by models trained only on the other seasons, so no grade comes from a model that saw that season. This page shows season, pitch-type and game summaries; pitch-by-pitch report cards are in the full ProPitching Index app.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const f0 = d3.format('.0f'), f1 = d3.format('.1f'), fc = d3.format(',');
+  const f3 = (x) => d3.format('.3f')(x).replace(/^0/, '');
+  const sgn = (x) => (x > 0 ? '+' : '') + f1(x);
+  const fdate = (s) => d3.utcFormat('%b %-d')(new Date(s + 'T00:00:00Z'));
+  const GAMES = { 2023: 'games_2023', 2024: 'games_2024', 2025: 'games_2025', 2026: 'games_2026' };
+  window.ppState = window.ppState || { page: 'leaders', role: 'all', sort: { k: 'ppi', dir: -1 }, q: '' };
+  const S = window.ppState;
+
+  const gradeClass = (x) => (x >= 110 ? 'good' : x <= 90 ? 'bad' : '');
+  const td = (text, cls) => { const c = document.createElement('td'); c.textContent = text; if (cls) c.className = cls; return c; };
+  const fail = (el) => { el.replaceChildren(); const d = document.createElement('div'); d.className = 'pp-fail'; d.textContent = 'Failed to load'; el.append(d); };
+
+  const params = () => dash.params();
+  const year = () => Number(params().year) || null;
+
+  // ---- tabs ----
+  const show = (page) => {
+    S.page = page;
+    document.querySelectorAll('.pp-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.page === page)));
+    document.querySelectorAll('.pp-page').forEach((p) => { p.hidden = p.id !== page; });
+    dash.setLink(page);
+    draw();
+  };
+  document.querySelectorAll('.pp-tab').forEach((b) => b.addEventListener('click', () => show(b.dataset.page)));
+  const openPitcher = (pid) => { dash.setParams({ pitcher: Number(pid) }); show('pitcher'); };
+
+  // ---- controls ----
+  $('#pp-year').addEventListener('change', (e) => dash.setParams({ year: Number(e.target.value) }));
+  $('#lb-role').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.role = b.dataset.v; draw(); });
+  $('#lb-min').addEventListener('change', draw);
+  $('#lb-q').addEventListener('input', (e) => { S.q = e.target.value.trim().toLowerCase(); draw(); });
+  document.querySelectorAll('#lb-table th button').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.k;
+    S.sort = { k, dir: S.sort.k === k ? -S.sort.dir : (['name', 'team', 'role', 'rank'].includes(k) ? 1 : -1) };
+    draw();
+  }));
+  $('#lb-table tbody').addEventListener('click', (e) => { const r = e.target.closest('tr[data-key]'); if (r) openPitcher(r.dataset.key.split('-')[0]); });
+  ['#latest-table', '#best-table'].forEach((t) => $(t + ' tbody').addEventListener('click', (e) => {
+    const r = e.target.closest('tr[data-key]'); if (r) openPitcher(r.dataset.key.split('-')[0]);
+  }));
+  $('#pi-q').addEventListener('change', (e) => {
+    const opt = [...$('#pi-list').options].find((o) => o.value === e.target.value);
+    if (opt) { dash.setParams({ pitcher: Number(opt.dataset.pid) }); e.target.value = ''; e.target.blur(); }
+  });
+
+  // ---- tooltip ----
+  const tip = (box) => {
+    let t = box.querySelector('.pp-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'pp-tip'; t.hidden = true; box.append(t); }
+    return {
+      show(ev, lines) {
+        t.replaceChildren(...lines.map(([cls, txt]) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = txt; return d; }));
+        t.hidden = false;
+        const r = box.getBoundingClientRect();
+        let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+        x = Math.min(x, r.width - t.offsetWidth - 4); y = Math.min(y, r.height - t.offsetHeight);
+        t.style.left = Math.max(0, x) + 'px'; t.style.top = Math.max(0, y) + 'px';
+      },
+      hide() { t.hidden = true; },
+    };
+  };
+
+  // ---- leaderboard ----
+  const drawLeaders = (rows, y) => {
+    const min = Number($('#lb-min').value);
+    let r = rows.filter((d) => d.year === y && d.pitches >= min && (S.role === 'all' || d.role === S.role));
+    const ranked = [...r].sort((a, b) => b.ppi - a.ppi || b.pitches - a.pitches);
+    const rank = new Map(ranked.map((d, i) => [d.id, i + 1]));
+    if (S.q) r = r.filter((d) => (d.name + ' ' + d.team).toLowerCase().includes(S.q));
+    const { k, dir } = S.sort;
+    const val = (d) => (k === 'rank' ? rank.get(d.id) : d[k]);
+    r.sort((a, b) => { const x = val(a), z = val(b); return (typeof x === 'string' ? x.localeCompare(z) : (x ?? -1e9) - (z ?? -1e9)) * dir; });
+    document.querySelectorAll('#lb-table th').forEach((th) => {
+      const b = th.querySelector('button'); th.setAttribute('aria-sort', b.dataset.k === k ? (dir > 0 ? 'ascending' : 'descending') : 'none');
+    });
+    document.querySelectorAll('#lb-role button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S.role)));
+    const body = $('#lb-table tbody');
+    body.replaceChildren(...r.map((d) => {
+      const tr = document.createElement('tr'); tr.dataset.key = d.id; tr.className = 'click';
+      const ppi = td('', ''); const bar = document.createElement('span'); bar.className = 'bar';
+      const num = document.createElement('span'); num.textContent = f0(d.ppi); num.className = gradeClass(d.ppi);
+      const track = document.createElement('i'); const fill = document.createElement('b');
+      const x = Math.max(60, Math.min(140, d.ppi)); const lo = Math.min(x, 100), hi = Math.max(x, 100);
+      fill.style.left = ((lo - 60) / 80 * 100) + '%'; fill.style.width = ((hi - lo) / 80 * 100) + '%';
+      fill.style.background = d.ppi >= 100 ? dash.colors[0] : 'var(--cds-chart-muted)';
+      track.append(fill); bar.append(track, num); ppi.append(bar);
+      tr.append(td(rank.get(d.id), 'l'), td(d.name, 'l name'), td(d.team, 'l'), td(d.role, 'l hide-sm'), td(fc(d.pitches), 'hide-sm'), ppi,
+        td(d.scout), td(f0(d.arsenal), gradeClass(d.arsenal)), td(f0(d.command), gradeClass(d.command)),
+        td(f0(d.projected), 'hide-sm ' + gradeClass(d.projected)), td(sgn(d.runs_saved), 'hide-sm'),
+        td(d.xwoba == null ? '—' : f3(d.xwoba), 'hide-sm'), td(f1(d.k_pct), 'hide-sm'), td(f1(d.bb_pct), 'hide-sm'), td(f1(d.csw_pct), 'hide-sm'));
+      return tr;
+    }));
+    $('#lb-title').textContent = `${y} season leaderboard`;
+    $('#lb-count').textContent = `${fc(r.length)} pitchers with ${fc(min)}+ regular-season pitches${S.role === 'SP' ? ', starters' : S.role === 'RP' ? ', relievers' : ''}.`;
+  };
+
+  // ---- pitcher page ----
+  const drawHistory = (rows, pid) => {
+    const box = $('#hist-chart'); box.querySelector('svg')?.remove();
+    const h = rows.filter((d) => d.pitcher === pid).sort((a, b) => a.year - b.year);
+    if (!h.length) return;
+    const W = box.clientWidth || 400, H = 240;
+    const series = [['PPI', 'ppi', dash.colors[0]], ['Arsenal+', 'arsenal', dash.colors[1]], ['Command+', 'command', dash.colors[2]]];
+    const vals = h.flatMap((d) => series.map((s) => d[s[1]]));
+    const yS = d3.scaleLinear([Math.min(80, d3.min(vals) - 4), Math.max(120, d3.max(vals) + 4)], [H - 28, 10]);
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const yAx = svg.append('g').attr('font-size', null).attr('font-family', null);
+    const ticks = yS.ticks(5);
+    const tl = yAx.selectAll('text').data(ticks).join('text').text((t) => t).attr('y', (t) => yS(t)).attr('dy', '0.32em')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    const left = d3.max(tl.nodes(), (n) => n.getComputedTextLength()) + 8;
+    tl.attr('x', left - 8).attr('text-anchor', 'end');
+    // end labels
+    const last = h[h.length - 1];
+    const lab = svg.append('g');
+    const lt = lab.selectAll('text').data(series).join('text').text((s) => `${s[0]} ${f0(last[s[1]])}`)
+      .attr('fill', (s) => s[2]).style('font-size', 'var(--cds-font-size-caption)').attr('font-weight', 600);
+    const right = d3.max(lt.nodes(), (n) => n.getComputedTextLength()) + 12;
+    const xS = d3.scalePoint(h.map((d) => d.year), [left + 12, W - right]).padding(h.length === 1 ? 0.5 : 0);
+    svg.insert('g', ':first-child').selectAll('line').data(ticks).join('line').attr('x1', left).attr('x2', W - right + 4)
+      .attr('y1', (t) => yS(t)).attr('y2', (t) => yS(t)).attr('stroke', 'var(--cds-chart-grid)');
+    svg.append('line').attr('x1', left).attr('x2', W - right + 4).attr('y1', yS(100)).attr('y2', yS(100))
+      .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 4');
+    svg.append('g').selectAll('text').data(h).join('text').text((d) => d.year).attr('x', (d) => xS(d.year)).attr('y', H - 6)
+      .attr('text-anchor', 'middle').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    const T = tip(box);
+    series.forEach(([nm, k, c]) => {
+      svg.append('path').datum(h).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+        .attr('d', d3.line((d) => xS(d.year), (d) => yS(d[k])));
+      svg.append('g').selectAll('circle').data(h).join('circle').attr('cx', (d) => xS(d.year)).attr('cy', (d) => yS(d[k])).attr('r', 3.5).attr('fill', c);
+    });
+    // place end labels apart
+    const ys = series.map((s) => ({ s, y: yS(last[s[1]]) })).sort((a, b) => a.y - b.y);
+    for (let i = 1; i < ys.length; i++) ys[i].y = Math.max(ys[i].y, ys[i - 1].y + 15);
+    lt.attr('x', W - right + 8).attr('y', (s) => ys.find((o) => o.s === s).y).attr('dy', '0.32em');
+    svg.append('g').selectAll('rect').data(h).join('rect').attr('x', (d) => xS(d.year) - 20).attr('width', 40).attr('y', 0).attr('height', H)
+      .attr('fill', 'transparent').on('mousemove', (ev, d) => T.show(ev, [['d', `${d.year} · ${fc(d.pitches)} pitches`], ...series.map(([nm, k]) => ['', `${nm} ${f0(d[k])}`])]))
+      .on('mouseleave', () => T.hide());
+  };
+
+  const drawGameChart = (games) => {
+    const box = $('#glog-chart'); box.querySelector('svg')?.remove();
+    if (!games.length) return;
+    const g = [...games].sort((a, b) => a.date.localeCompare(b.date));
+    const W = box.clientWidth || 400, H = 240;
+    const ext = d3.extent(g, (d) => d.game_ppi);
+    const yS = d3.scaleLinear([Math.min(70, ext[0] - 3), Math.max(130, ext[1] + 3)], [H - 28, 10]);
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const ticks = yS.ticks(5);
+    const tl = svg.append('g').selectAll('text').data(ticks).join('text').text((t) => t).attr('y', (t) => yS(t)).attr('dy', '0.32em')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    const left = d3.max(tl.nodes(), (n) => n.getComputedTextLength()) + 8;
+    tl.attr('x', left - 8).attr('text-anchor', 'end');
+    const xS = d3.scaleBand(g.map((d) => d.id), [left + 4, W - 4]).padding(0.25);
+    svg.insert('g', ':first-child').selectAll('line').data(ticks).join('line').attr('x1', left).attr('x2', W)
+      .attr('y1', (t) => yS(t)).attr('y2', (t) => yS(t)).attr('stroke', 'var(--cds-chart-grid)');
+    const bw = Math.min(32, xS.bandwidth());
+    const T = tip(box);
+    svg.append('g').selectAll('rect').data(g).join('rect')
+      .attr('x', (d) => xS(d.id) + (xS.bandwidth() - bw) / 2).attr('width', bw)
+      .attr('y', (d) => yS(Math.max(100, d.game_ppi))).attr('height', (d) => Math.max(1, Math.abs(yS(d.game_ppi) - yS(100))))
+      .attr('rx', Math.min(4, bw / 2)).attr('fill', (d) => (d.game_ppi >= 100 ? dash.colors[0] : 'var(--cds-chart-muted)'))
+      .on('mousemove', (ev, d) => T.show(ev, [['d', `${fdate(d.date)} vs ${d.opp}${d.post ? ' · ' + d.post : ''}`], ['', `Game PPI ${f0(d.game_ppi)} · scout ${d.scout}`], ['', `${d.ip} IP, ${d.pitches} pitches, ${d.k} K, ${d.bb} BB`]]))
+      .on('mouseleave', () => T.hide());
+    svg.append('line').attr('x1', left).attr('x2', W).attr('y1', yS(100)).attr('y2', yS(100)).attr('stroke', 'var(--cds-chart-axis)');
+    const first = g[0], lastG = g[g.length - 1];
+    svg.append('text').text(fdate(first.date)).attr('x', left + 4).attr('y', H - 6).attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    if (g.length > 1) svg.append('text').text(fdate(lastG.date)).attr('x', W - 4).attr('y', H - 6).attr('text-anchor', 'end').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+  };
+
+  const gameRow = (d, withName) => {
+    const tr = document.createElement('tr'); tr.dataset.key = d.id; if (withName) tr.className = 'click';
+    const cells = withName === 'best'
+      ? [td(fdate(d.date), 'l'), td(d.name, 'l name'), td(d.team, 'l'), td(d.opp, 'l')]
+      : withName ? [td(d.name, 'l name'), td(d.team, 'l'), td(d.opp, 'l'), td(d.post, 'l hide-sm')]
+        : [td(fdate(d.date), 'l'), td(d.opp, 'l'), td(d.post, 'l hide-sm')];
+    tr.append(...cells, td(d.ip), td(d.pitches), td(d.k), td(d.bb), td(d.h, 'hide-sm'), td(d.r, 'hide-sm'));
+    if (!withName) tr.append(td(f1(d.csw_pct), 'hide-sm'), td(d.velo_max == null ? '—' : f1(d.velo_max), 'hide-sm'));
+    tr.append(td(f0(d.game_ppi), gradeClass(d.game_ppi)), td(d.scout));
+    return tr;
+  };
+
+  const drawPitcher = (season, y) => {
+    const pool = season.filter((d) => d.year === y);
+    let pid = Number(params().pitcher);
+    let row = pool.find((d) => d.pitcher === pid);
+    if (!row) {
+      row = [...pool].filter((d) => d.pitches >= 1000).sort((a, b) => b.ppi - a.ppi)[0] || pool[0];
+      pid = row ? row.pitcher : null;
+    }
+    const list = $('#pi-list');
+    if (list.dataset.year !== String(y)) {
+      list.dataset.year = String(y);
+      list.replaceChildren(...[...pool].sort((a, b) => a.name.localeCompare(b.name)).map((d) => { const o = document.createElement('option'); o.value = `${d.name} (${d.team})`; o.dataset.pid = d.pitcher; return o; }));
+    }
+    const nameEl = $('#pi-name');
+    if (!row) { nameEl.textContent = `No pitcher with 100+ pitches in ${y}`; return; }
+    nameEl.classList.remove('dash-skeleton');
+    nameEl.textContent = row.name;
+    $('#pi-meta').textContent = `${row.team} · ${row.role === 'SP' ? 'Starter' : 'Reliever'} · ${y} regular season · ${fc(row.pitches)} pitches`;
+    const where = `id=${row.id}`;
+    const tiles = [['#t-ppi', f0(row.ppi), row.ppi], ['#t-ars', f0(row.arsenal), row.arsenal], ['#t-cmd', f0(row.command), row.command],
+      ['#t-proj', f0(row.projected), row.projected], ['#t-rs', sgn(row.runs_saved), null], ['#t-xw', row.xwoba == null ? '—' : f3(row.xwoba), null]];
+    tiles.forEach(([sel, txt, g]) => { const el = $(sel); el.textContent = txt; el.dataset.where = where; el.className = 'v ' + (g == null ? '' : gradeClass(g)); });
+    $('#t-ppi-s').textContent = `Scouting ${row.scout} · ${row.scout_label}`;
+    drawHistory(season, pid);
+
+    const ad = dash.data('arsenal');
+    const abody = $('#ars-table tbody');
+    if (ad.status === 'ok') {
+      const a = ad.data.filter((d) => d.pitcher === pid && d.year === y).sort((p, q) => q.pitches - p.pitches);
+      abody.replaceChildren(...a.map((d) => {
+        const tr = document.createElement('tr'); tr.dataset.key = d.id;
+        tr.append(td(d.pitch, 'l name'), td(fc(d.pitches)), td(f1(d.usage_pct)), td(f1(d.velo)), td(f1(d.ivb), 'hide-sm'), td(f1(d.hb), 'hide-sm'),
+          td(d.spin == null ? '—' : fc(d.spin), 'hide-sm'), td(d.whiff_pct == null ? '—' : f1(d.whiff_pct), 'hide-sm'), td(f1(d.csw_pct), 'hide-sm'),
+          td(f0(d.ppi), gradeClass(d.ppi)), td(d.scout), td(f0(d.arsenal), gradeClass(d.arsenal)), td(f0(d.command), gradeClass(d.command)));
+        return tr;
+      }));
+    } else if (ad.status === 'error') { abody.replaceChildren(); }
+
+    const gid = GAMES[y];
+    const pg = $('#pg-table'); pg.dataset.source = gid;
+    $('#glog-chart').dataset.source = gid;
+    const gd = gid ? dash.data(gid) : { status: 'missing' };
+    $('#glog-title').textContent = `Game PPI, every ${y} outing`;
+    if (gd.status === 'ok') {
+      const g = gd.data.filter((d) => d.pitcher === pid);
+      drawGameChart(g);
+      $('#pg-table tbody').replaceChildren(...[...g].sort((p, q) => q.date.localeCompare(p.date)).map((d) => gameRow(d, false)));
+    } else if (gd.status === 'error') { fail($('#glog-chart')); }
+  };
+
+  // ---- games page ----
+  const drawGames = (y) => {
+    const gid = GAMES[y]; if (!gid) return;
+    ['#latest-table', '#best-table'].forEach((t) => { $(t).dataset.source = gid; });
+    const gd = dash.data(gid);
+    if (gd.status !== 'ok') return;
+    const g = gd.data;
+    const lastDate = d3.max(g, (d) => d.date);
+    const latest = g.filter((d) => d.date === lastDate).sort((a, b) => b.game_ppi - a.game_ppi);
+    $('#latest-title').textContent = `Latest games: ${d3.utcFormat('%A, %B %-d, %Y')(new Date(lastDate + 'T00:00:00Z'))}`;
+    $('#latest-table tbody').replaceChildren(...latest.map((d) => gameRow(d, true)));
+    const best = g.filter((d) => d.pitches >= 60).sort((a, b) => b.game_ppi - a.game_ppi || b.k - a.k).slice(0, 30);
+    $('#best-title').textContent = `Best outings of ${y}`;
+    $('#best-table tbody').replaceChildren(...best.map((d) => gameRow(d, 'best')));
+  };
+
+  // ---- main draw ----
+  function draw() {
+    const sd = dash.data('season');
+    if (sd.status === 'error') { fail($('#lb-wrap')); return; }
+    if (sd.status !== 'ok') return;
+    const season = sd.data;
+    const years = [...new Set(season.map((d) => d.year))].sort((a, b) => b - a);
+    let y = year();
+    if (!years.includes(y)) { y = years[0]; dash.setParams({ year: y }); return; }
+    const sel = $('#pp-year');
+    if (sel.options.length !== years.length) sel.replaceChildren(...years.map((v) => new Option(String(v), String(v))));
+    sel.value = String(y);
+
+    const top = season.filter((d) => d.year === y && d.pitches >= 1000).sort((a, b) => b.ppi - a.ppi)[0];
+    const tk = $('#takeaway');
+    if (top) {
+      const n = document.createElement('b'); n.textContent = top.name; n.dataset.source = 'season'; n.dataset.field = 'name'; n.dataset.where = `id=${top.id}`;
+      const p = document.createElement('b'); p.textContent = f0(top.ppi); p.dataset.source = 'season'; p.dataset.field = 'ppi'; p.dataset.where = `id=${top.id}`;
+      tk.replaceChildren(`${y} leader among pitchers with 1,000+ pitches: `, n, ', PPI ', p, ` (scouting ${top.scout}, ${top.scout_label.toLowerCase()}).`);
+    }
+    if (S.page === 'leaders') drawLeaders(season, y);
+    if (S.page === 'pitcher') drawPitcher(season, y);
+    if (S.page === 'games') drawGames(y);
+  }
+
+  dash.onData(draw);
+  const named = location.hash.slice(1);
+  if (['leaders', 'pitcher', 'games', 'method'].includes(named)) show(named);
+})();
+</script>

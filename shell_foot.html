@@ -1,0 +1,11 @@
+<footer class="site-foot">
+  <p>ProPitching Index grades every MLB pitch since 2023 on a 100 scale (100 = average, 10 points = one standard deviation). Data: Baseball Savant / Statcast, regular season and postseason 2023 to 2026. <span id="site-updated"></span></p>
+  <p>Independent project, not affiliated with or endorsed by Major League Baseball.</p>
+</footer>
+<script>
+fetch("data/meta.json").then((r) => r.json()).then((m) => {
+  document.getElementById("site-updated").textContent = "Games through " + d3.utcFormat("%B %-d, %Y")(new Date(m.through + "T00:00:00Z")) + ".";
+}).catch(() => {});
+</script>
+</body>
+</html>

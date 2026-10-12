@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- foul pole with screen -->
+  <rect x="49" y="4" width="4" height="56" rx="1" fill="#F2C230"/>
+  <rect x="53" y="8" width="7" height="22" fill="#F2C230" opacity="0.55"/>
+  <rect x="44" y="58" width="14" height="3" rx="1" fill="#8A94A6"/>
+  <!-- baseball -->
+  <circle cx="24" cy="36" r="19" fill="#F5F5F1" stroke="#2BB3A3" stroke-width="2"/>
+  <path d="M12.5 21.5 C19 28 19 44 12.5 50.5" fill="none" stroke="#C8453B" stroke-width="2"/>
+  <path d="M35.5 21.5 C29 28 29 44 35.5 50.5" fill="none" stroke="#C8453B" stroke-width="2"/>
+  <g stroke="#C8453B" stroke-width="1.6" stroke-linecap="round">
+    <path d="M14 26 l3 -1.5"/><path d="M15.5 31 l3 -0.8"/><path d="M16 36 l3 0"/><path d="M15.5 41 l3 0.8"/><path d="M14 46 l3 1.5"/>
+    <path d="M34 26 l-3 -1.5"/><path d="M32.5 31 l-3 -0.8"/><path d="M32 36 l-3 0"/><path d="M32.5 41 l-3 0.8"/><path d="M34 46 l-3 1.5"/>
+  </g>
+</svg>
