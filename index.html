@@ -188,6 +188,7 @@ window.dash = (() => {
             <th data-field="scout"><button data-k="scout">Scout</button></th>
             <th data-field="arsenal"><button data-k="arsenal">Arsenal+</button></th>
             <th data-field="command"><button data-k="command">Command+</button></th>
+            <th class="hide-sm" data-field="count"><button data-k="count">Count+</button></th>
             <th class="hide-sm" data-field="projected"><button data-k="projected">Projected</button></th>
             <th class="hide-sm" data-field="runs_saved"><button data-k="runs_saved">Runs saved</button></th>
             <th class="hide-sm" data-field="xwoba"><button data-k="xwoba">xwOBA</button></th>
@@ -212,6 +213,7 @@ window.dash = (() => {
       <div class="pp-tile"><span class="k">PPI</span><span class="v" id="t-ppi" data-source="season" data-field="ppi">—</span><span class="s" id="t-ppi-s"></span></div>
       <div class="pp-tile"><span class="k">Arsenal+ (stuff)</span><span class="v" id="t-ars" data-source="season" data-field="arsenal">—</span><span class="s">Velocity, spin and movement</span></div>
       <div class="pp-tile"><span class="k">Command+</span><span class="v" id="t-cmd" data-source="season" data-field="command">—</span><span class="s">Hitting his spots, avoiding costly balls</span></div>
+      <div class="pp-tile"><span class="k">Count+</span><span class="v" id="t-cnt" data-source="season" data-field="count">—</span><span class="s">Living ahead in the count</span></div>
       <div class="pp-tile"><span class="k">Projected PPI</span><span class="v" id="t-proj" data-source="season" data-field="projected">—</span><span class="s">75% PPI + 25% Arsenal+</span></div>
       <div class="pp-tile"><span class="k">Runs saved</span><span class="v" id="t-rs" data-source="season" data-field="runs_saved">—</span><span class="s">vs an average pitch in the same counts</span></div>
       <div class="pp-tile"><span class="k">xwOBA allowed</span><span class="v" id="t-xw" data-source="season" data-field="xwoba">—</span><span class="s">Expected results from contact, K and BB</span></div>
@@ -296,7 +298,7 @@ window.dash = (() => {
       <h3>How to read the numbers</h3>
       <p>Each pitch is ranked against every pitch thrown in the same count, so a great 0-0 pitch and a great 3-2 pitch both score high. 100 is average and 10 points is one standard deviation: 110 beats about 84% of pitches, 120 about 98%. Season grades are adjusted for sample size, so a pitcher with few pitches is pulled toward 100.</p>
       <h3>The family of grades</h3>
-      <p><b>PPI</b> is the overall grade of the pitch. <b>Arsenal+</b> grades only its physics: velocity, spin, movement, release and how it pairs with his fastball, ignoring where it went. It compares a pitch only with pitches of the same type: a fastball with fastballs, a curveball with curveballs. <b>Command+</b> grades how close he came to his usual spot for that pitch, hitter side and count, and how costly a likely ball was in that count. <b>Projected PPI</b> is 75% PPI plus 25% Arsenal+, the mix that best predicted the next season. <b>Runs saved</b> adds up how much better each pitch was than an average pitch in the same count, in runs.</p>
+      <p><b>PPI</b> is the overall grade of the pitch. <b>Arsenal+</b> grades only its physics: velocity, spin, movement, release and how it pairs with his fastball, ignoring where it went. It compares a pitch only with pitches of the same type: a fastball with fastballs, a curveball with curveballs. <b>Command+</b> grades how close he came to his usual spot for that pitch, hitter side and count, and how costly a likely ball was in that count. <b>Count+</b> measures how much of his work he does ahead in the count (more strikes than balls) and how little behind; pitchers who live ahead allow less damage, and it predicts next season's results. <b>Projected PPI</b> is 75% PPI plus 25% Arsenal+, the mix that best predicted the next season. <b>Runs saved</b> adds up how much better each pitch was than an average pitch in the same count, in runs.</p>
       <h3>Scouting scale</h3>
       <p>The scouting grade is PPI minus 50, rounded to the nearest 5 and kept between 20 and 80.</p>
       <table>
@@ -410,6 +412,7 @@ window.dash = (() => {
       track.append(fill); bar.append(track, num); ppi.append(bar);
       tr.append(td(rank.get(d.id), 'l'), td(d.name, 'l name'), td(d.team, 'l'), td(d.role, 'l hide-sm'), td(fc(d.pitches), 'hide-sm'), ppi,
         td(d.scout), td(f0(d.arsenal), gradeClass(d.arsenal)), td(f0(d.command), gradeClass(d.command)),
+        td(d.count == null ? '—' : f0(d.count), 'hide-sm ' + gradeClass(d.count)),
         td(f0(d.projected), 'hide-sm ' + gradeClass(d.projected)), td(sgn(d.runs_saved), 'hide-sm'),
         td(d.xwoba == null ? '—' : f3(d.xwoba), 'hide-sm'), td(f1(d.k_pct), 'hide-sm'), td(f1(d.bb_pct), 'hide-sm'), td(f1(d.csw_pct), 'hide-sm'));
       return tr;
@@ -524,7 +527,7 @@ window.dash = (() => {
     $('#pi-meta').textContent = `${row.team} · ${row.role === 'SP' ? 'Starter' : 'Reliever'} · ${y} regular season · ${fc(row.pitches)} pitches`;
     const where = `id=${row.id}`;
     const tiles = [['#t-ppi', f0(row.ppi), row.ppi], ['#t-ars', f0(row.arsenal), row.arsenal], ['#t-cmd', f0(row.command), row.command],
-      ['#t-proj', f0(row.projected), row.projected], ['#t-rs', sgn(row.runs_saved), null], ['#t-xw', row.xwoba == null ? '—' : f3(row.xwoba), null]];
+      ['#t-cnt', row.count == null ? '—' : f0(row.count), row.count], ['#t-proj', f0(row.projected), row.projected], ['#t-rs', sgn(row.runs_saved), null], ['#t-xw', row.xwoba == null ? '—' : f3(row.xwoba), null]];
     tiles.forEach(([sel, txt, g]) => { const el = $(sel); el.textContent = txt; el.dataset.where = where; el.className = 'v ' + (g == null ? '' : gradeClass(g)); });
     $('#t-ppi-s').textContent = `Scouting ${row.scout} · ${row.scout_label}`;
     drawHistory(season, pid);
