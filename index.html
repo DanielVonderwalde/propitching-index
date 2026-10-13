@@ -230,14 +230,14 @@ window.dash = (() => {
     </div>
     <div class="pp-card" id="ars-card">
       <h3>Pitch by pitch type</h3>
-      <p class="pp-note">Regular season, pitch types thrown 20+ times. Type+ compares a pitch only with pitches of the same type (130 = elite). IVB and HB are induced vertical and horizontal break in inches (positive HB is toward his arm side).</p>
+      <p class="pp-note">Regular season, pitch types thrown 20+ times. Arsenal+ compares a pitch only with pitches of the same type (130 = elite). IVB and HB are induced vertical and horizontal break in inches (positive HB is toward his arm side).</p>
       <div class="pp-scroll short">
         <table id="ars-table" data-source="arsenal" data-row-key="id">
           <thead><tr>
             <th class="l" data-field="pitch">Pitch</th><th data-field="pitches">Pitches</th><th data-field="usage_pct">Usage %</th>
             <th data-field="velo">Velo</th><th class="hide-sm" data-field="ivb">IVB</th><th class="hide-sm" data-field="hb">HB</th><th class="hide-sm" data-field="spin">Spin</th>
             <th class="hide-sm" data-field="whiff_pct">Whiff %</th><th class="hide-sm" data-field="csw_pct">CSW %</th>
-            <th data-field="ppi">PPI</th><th data-field="scout">Scout</th><th data-field="arsenal">Arsenal+</th><th data-field="type_plus" title="Arsenal+ among pitches of the same type: 100 = average, 130 = elite">Type+</th><th data-field="command">Command+</th>
+            <th data-field="ppi">PPI</th><th data-field="scout">Scout</th><th data-field="arsenal">Arsenal+</th><th data-field="command">Command+</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -296,7 +296,7 @@ window.dash = (() => {
       <h3>How to read the numbers</h3>
       <p>Each pitch is ranked against every pitch thrown in the same count, so a great 0-0 pitch and a great 3-2 pitch both score high. 100 is average and 10 points is one standard deviation: 110 beats about 84% of pitches, 120 about 98%. Season grades are adjusted for sample size, so a pitcher with few pitches is pulled toward 100.</p>
       <h3>The family of grades</h3>
-      <p><b>PPI</b> is the overall grade of the pitch. <b>Arsenal+</b> grades only its physics: velocity, spin, movement, release and how it pairs with his fastball, ignoring where it went. <b>Command+</b> grades how close he came to his usual spot for that pitch, hitter side and count, and how costly a likely ball was in that count. <b>Projected PPI</b> is 75% PPI plus 25% Arsenal+, the mix that best predicted the next season. <b>Runs saved</b> adds up how much better each pitch was than an average pitch in the same count, in runs.</p>
+      <p><b>PPI</b> is the overall grade of the pitch. <b>Arsenal+</b> grades only its physics: velocity, spin, movement, release and how it pairs with his fastball, ignoring where it went. It compares a pitch only with pitches of the same type: a fastball with fastballs, a curveball with curveballs. <b>Command+</b> grades how close he came to his usual spot for that pitch, hitter side and count, and how costly a likely ball was in that count. <b>Projected PPI</b> is 75% PPI plus 25% Arsenal+, the mix that best predicted the next season. <b>Runs saved</b> adds up how much better each pitch was than an average pitch in the same count, in runs.</p>
       <h3>Scouting scale</h3>
       <p>The scouting grade is PPI minus 50, rounded to the nearest 5 and kept between 20 and 80.</p>
       <table>
@@ -537,8 +537,7 @@ window.dash = (() => {
         const tr = document.createElement('tr'); tr.dataset.key = d.id;
         tr.append(td(d.pitch, 'l name'), td(fc(d.pitches)), td(f1(d.usage_pct)), td(f1(d.velo)), td(f1(d.ivb), 'hide-sm'), td(f1(d.hb), 'hide-sm'),
           td(d.spin == null ? '—' : fc(d.spin), 'hide-sm'), td(d.whiff_pct == null ? '—' : f1(d.whiff_pct), 'hide-sm'), td(f1(d.csw_pct), 'hide-sm'),
-          td(f0(d.ppi), gradeClass(d.ppi)), td(d.scout), td(f0(d.arsenal), gradeClass(d.arsenal)),
-          td(d.type_plus == null ? '—' : f0(d.type_plus), gradeClass(d.type_plus)), td(f0(d.command), gradeClass(d.command)));
+          td(f0(d.ppi), gradeClass(d.ppi)), td(d.scout), td(f0(d.arsenal), gradeClass(d.arsenal)), td(f0(d.command), gradeClass(d.command)));
         return tr;
       }));
     } else if (ad.status === 'error') { abody.replaceChildren(); }
