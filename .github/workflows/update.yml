@@ -1,0 +1,56 @@
+name: Daily data update
+
+# Checks Baseball Savant for new games every two hours from 11:15 PM to 1:15 PM Eastern; when there are new
+# pitches it grades them, rebuilds the data, updates this site and the online app. Runs on GitHub, not on a computer.
+on:
+  schedule:
+    - cron: "15 3-17/2 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Rebuild even if there are no new pitches"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: site
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Get the pipeline code
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          pip install -q huggingface_hub==2.2.0
+          python -c "from huggingface_hub import snapshot_download; snapshot_download('DanielVonder/propitching-data', repo_type='dataset', local_dir='work', allow_patterns=['src/*'])"
+          pip install -q -r work/src/requirements_cloud.txt
+
+      - name: Update the data
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python work/src/cloud_update.py --site site ${{ inputs.force && '--force' || '' }}
+
+      - name: Publish the site
+        working-directory: site
+        run: |
+          git config user.name "ProPitching Index update"
+          git config user.email "daniel.vonder@gmail.com"
+          git add -A data index.html
+          if git diff --cached --quiet; then echo "Site already up to date"; exit 0; fi
+          git commit -q -m "Update data"
+          git push -q
