@@ -1,10 +1,11 @@
 name: Daily data update
 
-# Checks Baseball Savant for new games every two hours from 11:15 PM to 1:15 PM Eastern; when there are new
-# pitches it grades them, rebuilds the data, updates this site and the online app. Runs on GitHub, not on a computer.
+# Checks Baseball Savant for new games every hour (GitHub may start a scheduled run late or skip it; the next one
+# covers it). A check with no new pitches ends in about a minute; new pitches are graded, the data rebuilt, and this
+# site and the online app updated. Runs on GitHub, not on a computer.
 on:
   schedule:
-    - cron: "15 3-17/2 * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       force:
