@@ -1,8 +1,9 @@
 name: Daily data update
 
-# Checks Baseball Savant for new games every hour (GitHub may start a scheduled run late or skip it; the next one
-# covers it). A check with no new pitches ends in about a minute; new pitches are graded, the data rebuilt, and this
-# site and the online app updated. Runs on GitHub, not on a computer.
+# Checks Baseball Savant for new games about every 15-25 minutes: each run starts the next one 15 minutes after it
+# ends. The hourly schedule is only a backup that restarts the chain (GitHub often starts scheduled runs hours late).
+# A check with no new pitches ends in about a minute; new pitches are graded, the data rebuilt, and this site and the
+# online app updated. Runs on GitHub, not on a computer.
 on:
   schedule:
     - cron: "17 * * * *"
@@ -15,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: daily-update
@@ -60,3 +62,13 @@ jobs:
             sleep 10
           done
           exit 1
+
+      - name: Start the next check in 15 minutes
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 900
+          others=$(gh run list --repo "${{ github.repository }}" --workflow update.yml --limit 20 \
+            --json databaseId,status -q '[.[] | select(.status != "completed" and .databaseId != ${{ github.run_id }})] | length')
+          if [ "$others" = "0" ]; then gh workflow run update.yml --repo "${{ github.repository }}"; else echo "Another check is already queued"; fi
